@@ -1,10 +1,8 @@
-// App.tsx
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
 
-// Importação das Telas
 import Login from './src/screens/Login';
 import Freelancer from './src/screens/freelancer';
 import Cliente from './src/screens/cliente';
