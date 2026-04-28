@@ -2,7 +2,7 @@ import { drizzle } from 'drizzle-orm/expo-sqlite';
 import * as SQLite from 'expo-sqlite';
 import * as schema from './schema';
 
-const expoDb = SQLite.openDatabaseSync('workmatch.db');
+const expoDb = SQLite.openDatabaseSync('Workmatch.db');
 
 expoDb.execSync(`
   CREATE TABLE IF NOT EXISTS profissionais (
