@@ -21,6 +21,10 @@ export default function Login({ navigation }: any) {
       <TouchableOpacity style={styles.botao} onPress={() => navigation.navigate('Admin')}>
         <Text style={styles.textoBotao}>Entrar como Admin</Text>
       </TouchableOpacity>
+
+      <TouchableOpacity style={styles.botao} onPress={() => navigation.navigate('Home')}>
+        <Text style={styles.textoBotao}>Home</Text>
+      </TouchableOpacity>
     </View>
   );
 }

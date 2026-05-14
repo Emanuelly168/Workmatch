@@ -7,6 +7,7 @@ import Login from './src/screens/Login';
 import Freelancer from './src/screens/freelancer';
 import Cliente from './src/screens/cliente';
 import Admin from './src/screens/admin';
+import homeScreen  from './src/screens/homeScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -19,6 +20,7 @@ export default function App() {
         <Stack.Screen name="Freelancer" component={Freelancer} />
         <Stack.Screen name="Cliente" component={Cliente} />
         <Stack.Screen name="Admin" component={Admin} />
+        <Stack.Screen name="Home" component={homeScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
