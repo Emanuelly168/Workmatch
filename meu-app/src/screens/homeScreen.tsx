@@ -14,7 +14,7 @@ interface HomeScreenProps {
   navigation?: any;
 }
 
-export default function homeScreen({ navigation } : any)  {
+export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const screenHeight = Dimensions.get('window').height;
 
   const handleBrowseJobs = () => {
@@ -31,13 +31,11 @@ export default function homeScreen({ navigation } : any)  {
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {}
       <View style={styles.header}>
         <Text style={styles.greeting}>Bem-vindo ao WorkMatch! 🤝</Text>
         <Text style={styles.subGreeting}>Encontre as melhores oportunidades de trabalho</Text>
       </View>
 
-      {}
       <View style={styles.bannerContainer}>
         <View style={styles.banner}>
           <Text style={styles.bannerTitle}>Oportunidades em Destaque</Text>
@@ -53,7 +51,6 @@ export default function homeScreen({ navigation } : any)  {
         </View>
       </View>
 
-      {}
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
           <Text style={styles.statNumber}>1.250+</Text>
@@ -69,7 +66,6 @@ export default function homeScreen({ navigation } : any)  {
         </View>
       </View>
 
-      {}
       <View style={styles.actionButtonsContainer}>
         <TouchableOpacity 
           style={styles.actionButton}
@@ -105,7 +101,6 @@ export default function homeScreen({ navigation } : any)  {
         </TouchableOpacity>
       </View>
 
-      {}
       <View style={styles.howItWorksContainer}>
         <Text style={styles.sectionTitle}>Como Funciona?</Text>
         
@@ -158,7 +153,6 @@ export default function homeScreen({ navigation } : any)  {
         </View>
       </View>
 
-      {}
       <View style={styles.footerCTA}>
         <Text style={styles.footerCTATitle}>Pronto para começar?</Text>
         <TouchableOpacity 
