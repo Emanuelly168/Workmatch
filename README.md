@@ -1,39 +1,49 @@
-# WorkMatch 🤝
+# WorkMatch 📱
 
-O WorkMatch é uma plataforma digital focada em conectar freelancers a clientes. Este repositório contém os módulos de gerenciamento de profissionais (CRUD), implementados de duas formas distintas para fins acadêmicos.
+Plataforma mobile desenvolvida em **React Native** com **Expo** para conectar freelancers e clientes. O aplicativo funciona com persistência de dados local, permitindo uma experiência offline completa.
 
-## Parte 1: API (Backend)
-API minimalista construída com TypeScript, Express, SQLite e Drizzle ORM para gerenciar o catálogo de freelancers.
+## 🎯 Visão Geral
 
-### Como executar:
-1. Acesse a pasta do backend no terminal.
-2. Instale as dependências:
-   \`\`\`bash
-   npm install express cors better-sqlite3 drizzle-orm
-   npm install -D typescript @types/express @types/cors @types/better-sqlite3 tsx
-   \`\`\`
-3. Inicie o servidor:
-   \`\`\`bash
-   npx tsx src/server.ts
-   \`\`\`
-A API estará rodando em \`http://localhost:3000\`.
+WorkMatch é um aplicativo mobile que oferece:
+- ✅ Interface intuitiva para gerenciamento de freelancers
+- ✅ Persistência de dados local com SQLite
+- ✅ Operações offline completas
+- ✅ Navegação fluida entre telas
+- ✅ Gerenciamento de estado com Context API
 
-## Parte 2: App Mobile (Frontend - React Native / Expo)
-Aplicativo React Native que possui telas para consumo da API via Axios e também uma vertente de persistência de dados local offline utilizando \`expo-sqlite\` e Drizzle.
+## 🛠 Stack Tecnológico
 
-### Como executar:
-1. Acesse a pasta do aplicativo no terminal.
-2. Instale as dependências do projeto:
-   \`\`\`bash
-   npm install
-   npm install axios
-   npx expo install expo-sqlite
-   npm install drizzle-orm
-   \`\`\`
-3. Inicie o Metro Bundler do Expo:
-   \`\`\`bash
-   npx expo start
-   \`\`\`
-4. Pressione \`a\` no terminal para emular no Android, ou leia o QR Code usando o aplicativo Expo Go no seu smartphone.
+| Tecnologia | Versão | Descrição |
+|-----------|--------|-----------|
+| **React Native** | 0.81.5 | Framework para desenvolvimento mobile |
+| **Expo** | ~54.0.33 | Plataforma para desenvolvimento React Native |
+| **TypeScript** | ~5.9.2 | Tipagem estática para JavaScript |
+| **Drizzle ORM** | 0.45.2 | ORM para gerenciamento de banco de dados |
+| **Expo SQLite** | ~16.0.10 | Banco de dados SQLite para app |
+| **React Navigation** | ^7.2.2 | Navegação entre telas |
 
-> **Nota para testes de API:** Se estiver utilizando o emulador Android, a rota do Axios deve apontar para \`http://10.0.2.2:3000\`. Caso esteja rodando no celular físico via Expo Go, substitua pelo IP local da sua máquina na rede Wi-Fi.
+## 📋 Pré-requisitos
+
+- **Node.js** (v16+) e npm
+- **Expo CLI** instalado globalmente
+- **Android Studio** (para emulador Android) ou
+- **Xcode** (para emulador iOS) ou
+- **Expo Go App** no smartphone
+
+## 🚀 Como Executar
+
+### 1. Instalação de Dependências
+
+```bash
+# Acesse a pasta do projeto
+cd meu-app
+
+# Instale todas as dependências
+npm install
+
+# Instale o Expo SQLite
+npx expo install expo-sqlite
+
+# Instale dependências de desenvolvimento
+npm install -D drizzle-kit
+```
