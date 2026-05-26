@@ -209,7 +209,7 @@ export const JobListingsScreen: React.FC = () => {
         </Text>
       </View>
 
-      {/* Search Bar */}
+      {/* barra de pesquisa */}
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
@@ -221,7 +221,7 @@ export const JobListingsScreen: React.FC = () => {
         <Text style={styles.searchIcon}>🔍</Text>
       </View>
 
-      {/* Filters */}
+      {/* filtros */}
       <View>
         <Text style={styles.filterLabel}>Categoria</Text>
         {renderCategoryFilter()}
@@ -232,7 +232,7 @@ export const JobListingsScreen: React.FC = () => {
         {renderExperienceFilter()}
       </View>
 
-      {/* Jobs List */}
+      {/* lista trabalhos */}
       {filteredJobs.length > 0 ? (
         <FlatList
           data={filteredJobs}

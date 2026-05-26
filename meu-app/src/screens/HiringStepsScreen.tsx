@@ -78,7 +78,7 @@ export const HiringStepsScreen: React.FC<HiringStepsScreenProps> = ({ route }) =
 
   const handleNextStep = async () => {
     if (currentStep === 0) {
-      // Validate proposal step
+      // Validacao proposta step
       if (!contractData.proposedBudget || !contractData.timeline) {
         alert('Por favor, preencha todos os campos da proposta');
         return;
@@ -88,7 +88,7 @@ export const HiringStepsScreen: React.FC<HiringStepsScreenProps> = ({ route }) =
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      // Complete hiring process
+      // Completo hiring processo
       completeHiringProcess();
     }
   };
@@ -102,10 +102,9 @@ export const HiringStepsScreen: React.FC<HiringStepsScreenProps> = ({ route }) =
   const completeHiringProcess = async () => {
     try {
       setLoading(true);
-      // Here you would typically send the contract data to your API
       console.log('Completing hiring process with data:', contractData);
 
-      // Simulate API call
+      // Simular API call
       await new Promise(resolve => setTimeout(resolve, 1500));
 
       alert('Contratação concluída com sucesso!');
