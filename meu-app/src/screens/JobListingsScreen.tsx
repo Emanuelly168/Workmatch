@@ -11,18 +11,18 @@ import {
   Image,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import axios from 'axios';
+import api from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 interface Job {
-  id: string;
-  title: string;
-  description: string;
-  budget: number;
+  id: number;
+  titulo: string;
+  descricao: string;
+  orcamento: number;
   status: string;
-  category: string;
-  experience_level: string;
-  created_at: string;
-  deadline?: string;
+  categoria: string;
+  usuario_id: number;
+  criado_em: number;
 }
 
 export const JobListingsScreen: React.FC = () => {
@@ -32,10 +32,9 @@ export const JobListingsScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [selectedExperience, setSelectedExperience] = useState<string>('all');
+  const [erro, setErro] = useState('');
 
   const categories = ['all', 'desenvolvimento', 'design', 'marketing', 'escrita', 'outros'];
-  const experienceLevels = ['all', 'iniciante', 'intermediário', 'avançado'];
 
   useEffect(() => {
     loadJobs();
@@ -43,18 +42,26 @@ export const JobListingsScreen: React.FC = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [jobs, searchQuery, selectedCategory, selectedExperience]);
+  }, [jobs, searchQuery, selectedCategory]);
 
   const loadJobs = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:3000/api/jobs', {
-        timeout: 5000,
-      });
-      setJobs(response.data || mockJobs);
-    } catch (error) {
-      console.log('Using mock data due to API error');
-      setJobs(mockJobs);
+      setErro('');
+      const data = await api.listarVagas();
+      
+      // Transformar dados da API
+      const vagasFormatadas = data.map((vaga: any) => ({
+        ...vaga,
+        titulo: vaga.titulo || 'Sem título',
+      }));
+      
+      setJobs(vagasFormatadas);
+    } catch (error: any) {
+      console.log('Erro ao carregar vagas:', error);
+      const mensagem = error.response?.data?.error || 'Erro ao carregar vagas';
+      setErro(mensagem);
+      setJobs([]);
     } finally {
       setLoading(false);
     }
@@ -66,58 +73,49 @@ export const JobListingsScreen: React.FC = () => {
     if (searchQuery) {
       filtered = filtered.filter(
         job =>
-          job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          job.description.toLowerCase().includes(searchQuery.toLowerCase())
+          job.titulo.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          job.descricao.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
     if (selectedCategory !== 'all') {
-      filtered = filtered.filter(job => job.category === selectedCategory);
-    }
-
-    if (selectedExperience !== 'all') {
-      filtered = filtered.filter(job => job.experience_level === selectedExperience);
+      filtered = filtered.filter(job => job.categoria === selectedCategory);
     }
 
     setFilteredJobs(filtered);
   };
 
-  const handleJobPress = (job: Job) => {
-    navigation.navigate('JobDetails', { job });
-  };
-
-  const handleApply = (jobId: string) => {
+  const handleApply = (jobId: number) => {
     navigation.navigate('HiringSteps', { jobId });
   };
 
   const renderJobCard = ({ item }: { item: Job }) => (
-    <TouchableOpacity
+    <View
       style={styles.jobCard}
-      onPress={() => handleJobPress(item)}
       activeOpacity={0.7}
     >
       <View style={styles.jobHeader}>
         <View style={{ flex: 1 }}>
           <Text style={styles.jobTitle} numberOfLines={2}>
-            {item.title}
+            {item.titulo}
           </Text>
-          <Text style={styles.jobCategory}>{item.category}</Text>
+          <Text style={styles.jobCategory}>{item.categoria}</Text>
         </View>
         <View style={styles.budgetBadge}>
-          <Text style={styles.budgetText}>R$ {item.budget}</Text>
+          <Text style={styles.budgetText}>R$ {item.orcamento.toLocaleString('pt-BR')}</Text>
         </View>
       </View>
 
       <Text style={styles.jobDescription} numberOfLines={2}>
-        {item.description}
+        {item.descricao}
       </Text>
 
       <View style={styles.jobFooter}>
         <View style={styles.experienceBadge}>
-          <Text style={styles.experienceText}>{item.experience_level}</Text>
+          <Text style={styles.experienceText}>{item.status}</Text>
         </View>
         <Text style={styles.dateText}>
-          {new Date(item.created_at).toLocaleDateString('pt-BR')}
+          {new Date(item.criado_em).toLocaleDateString('pt-BR')}
         </Text>
       </View>
 
@@ -127,7 +125,7 @@ export const JobListingsScreen: React.FC = () => {
       >
         <Text style={styles.applyButtonText}>Candidatar-se</Text>
       </TouchableOpacity>
-    </TouchableOpacity>
+    </View>
   );
 
   const renderCategoryFilter = () => (
@@ -159,35 +157,6 @@ export const JobListingsScreen: React.FC = () => {
     </ScrollView>
   );
 
-  const renderExperienceFilter = () => (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      style={styles.filterContainer}
-      contentContainerStyle={styles.filterContentContainer}
-    >
-      {experienceLevels.map(level => (
-        <TouchableOpacity
-          key={level}
-          style={[
-            styles.filterButton,
-            selectedExperience === level && styles.filterButtonActive,
-          ]}
-          onPress={() => setSelectedExperience(level)}
-        >
-          <Text
-            style={[
-              styles.filterButtonText,
-              selectedExperience === level && styles.filterButtonTextActive,
-            ]}
-          >
-            {level === 'all' ? 'Todos' : level.charAt(0).toUpperCase() + level.slice(1)}
-          </Text>
-        </TouchableOpacity>
-      ))}
-    </ScrollView>
-  );
-
   if (loading) {
     return (
       <View style={styles.container}>
@@ -209,6 +178,15 @@ export const JobListingsScreen: React.FC = () => {
         </Text>
       </View>
 
+      {erro ? (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{erro}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={loadJobs}>
+            <Text style={styles.retryButtonText}>Tentar Novamente</Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
+
       {/* barra de pesquisa */}
       <View style={styles.searchContainer}>
         <TextInput
@@ -227,17 +205,12 @@ export const JobListingsScreen: React.FC = () => {
         {renderCategoryFilter()}
       </View>
 
-      <View>
-        <Text style={styles.filterLabel}>Nível de Experiência</Text>
-        {renderExperienceFilter()}
-      </View>
-
       {/* lista trabalhos */}
       {filteredJobs.length > 0 ? (
         <FlatList
           data={filteredJobs}
           renderItem={renderJobCard}
-          keyExtractor={item => item.id}
+          keyExtractor={item => item.id.toString()}
           contentContainerStyle={styles.listContainer}
           scrollEnabled={false}
         />
@@ -253,7 +226,6 @@ export const JobListingsScreen: React.FC = () => {
             onPress={() => {
               setSearchQuery('');
               setSelectedCategory('all');
-              setSelectedExperience('all');
             }}
           >
             <Text style={styles.resetButtonText}>Limpar Filtros</Text>
@@ -263,49 +235,6 @@ export const JobListingsScreen: React.FC = () => {
     </View>
   );
 };
-
-const mockJobs: Job[] = [
-  {
-    id: '1',
-    title: 'Desenvolver aplicativo mobile em React Native',
-    description: 'Precisamos de um desenvolvedor para criar um aplicativo mobile completo com integração de APIs.',
-    budget: 3000,
-    status: 'open',
-    category: 'desenvolvimento',
-    experience_level: 'avançado',
-    created_at: '2026-05-10',
-  },
-  {
-    id: '2',
-    title: 'Design de Logo e Identidade Visual',
-    description: 'Criação de logo e guidelines de identidade visual para nova startup tecnológica.',
-    budget: 1500,
-    status: 'open',
-    category: 'design',
-    experience_level: 'intermediário',
-    created_at: '2026-05-12',
-  },
-  {
-    id: '3',
-    title: 'Copywriting para E-commerce',
-    description: 'Escrever textos persuasivos para produto de e-commerce de moda feminina.',
-    budget: 800,
-    status: 'open',
-    category: 'escrita',
-    experience_level: 'iniciante',
-    created_at: '2026-05-13',
-  },
-  {
-    id: '4',
-    title: 'Consultoria em Marketing Digital',
-    description: 'Analisar estratégia de marketing digital e propor melhorias para aumento de conversão.',
-    budget: 2500,
-    status: 'open',
-    category: 'marketing',
-    experience_level: 'avançado',
-    created_at: '2026-05-11',
-  },
-];
 
 const styles = StyleSheet.create({
   container: {
@@ -510,5 +439,29 @@ const styles = StyleSheet.create({
   resetButtonText: {
     color: '#FFFFFF',
     fontWeight: '600',
+  },
+  errorContainer: {
+    backgroundColor: '#FEE2E2',
+    margin: 16,
+    padding: 12,
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: '#DC2626',
+  },
+  errorText: {
+    color: '#DC2626',
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  retryButton: {
+    backgroundColor: '#DC2626',
+    padding: 8,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+  },
+  retryButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 12,
   },
 });

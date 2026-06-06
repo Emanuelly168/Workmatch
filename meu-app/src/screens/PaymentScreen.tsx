@@ -9,8 +9,11 @@ import {
   Modal,
   ActivityIndicator,
   Animated,
+  Alert,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import api from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 interface PaymentMethod {
   id: string;
@@ -26,7 +29,11 @@ interface PaymentScreenProps {
 
 export const PaymentScreen: React.FC<PaymentScreenProps> = ({ route }) => {
   const navigation = useNavigation<any>();
+  const { usuario } = useAuth();
   const amount = route?.params?.amount || 2500;
+  const vagaId = route?.params?.vagaId || 1;
+  const clienteId = route?.params?.clienteId || usuario?.id || 1;
+  const freelancerId = route?.params?.freelancerId || usuario?.id || 2;
   const projectTitle = route?.params?.projectTitle || 'Projeto WorkMatch';
 
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('card');
@@ -120,12 +127,12 @@ export const PaymentScreen: React.FC<PaymentScreenProps> = ({ route }) => {
         !cardData.expiryDate ||
         !cardData.cvv
       ) {
-        alert('Por favor, preencha todos os dados do cartão');
+        Alert.alert('Erro', 'Por favor, preencha todos os dados do cartão');
         return;
       }
     } else if (selectedPaymentMethod === 'bank') {
       if (!bankData.bankName || !bankData.accountNumber || !bankData.cpf) {
-        alert('Por favor, preencha todos os dados bancários');
+        Alert.alert('Erro', 'Por favor, preencha todos os dados bancários');
         return;
       }
     }
@@ -133,8 +140,20 @@ export const PaymentScreen: React.FC<PaymentScreenProps> = ({ route }) => {
     try {
       setLoading(true);
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2500));
+      // Criar pagamento via API
+      const pagamento = await api.criarPagamento(
+        vagaId,
+        clienteId,
+        freelancerId,
+        parseFloat(amount),
+        selectedPaymentMethod
+      );
+
+      // Simular processamento
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      // Atualizar status para processando
+      await api.atualizarStatusPagamento(pagamento.id, 'processando');
 
       // Success animation
       Animated.timing(successAnimation, {
@@ -147,15 +166,13 @@ export const PaymentScreen: React.FC<PaymentScreenProps> = ({ route }) => {
 
       // Show success screen
       setTimeout(() => {
-        navigation.replace('PaymentSuccess', {
-          amount: amount,
-          projectTitle: projectTitle,
-          paymentMethod: selectedPaymentMethod,
-        });
+        Alert.alert('Sucesso', 'Pagamento processado com sucesso!');
+        navigation.replace('Home');
       }, 1500);
-    } catch (error) {
+    } catch (error: any) {
+      const mensagem = error.response?.data?.error || 'Erro ao processar pagamento';
+      Alert.alert('Erro', mensagem);
       console.error('Payment error:', error);
-      alert('Erro ao processar pagamento. Tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -363,7 +380,7 @@ export const PaymentScreen: React.FC<PaymentScreenProps> = ({ route }) => {
           </View>
         </View>
 
-        {/* Payment Method Selection */}
+        {/* metodo de pagamento */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Forma de Pagamento</Text>
 
@@ -395,7 +412,7 @@ export const PaymentScreen: React.FC<PaymentScreenProps> = ({ route }) => {
           ))}
         </View>
 
-        {/* Payment Form */}
+        {/* form pagamento */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Detalhes do Pagamento</Text>
 
@@ -441,7 +458,7 @@ export const PaymentScreen: React.FC<PaymentScreenProps> = ({ route }) => {
           </View>
         </View>
 
-        {/* Terms */}
+        {/* termos */}
         <View style={styles.termsSection}>
           <View style={styles.termsCheckbox}>
             <TouchableOpacity style={styles.checkbox}>
@@ -456,7 +473,7 @@ export const PaymentScreen: React.FC<PaymentScreenProps> = ({ route }) => {
         </View>
       </ScrollView>
 
-      {/* Payment Button */}
+      {/* botao de pagamento */}
       <View style={styles.footer}>
         <TouchableOpacity
           style={styles.payButton}
@@ -474,7 +491,7 @@ export const PaymentScreen: React.FC<PaymentScreenProps> = ({ route }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Confirmation Modal */}
+      {/* confirmacao */}
       <Modal
         visible={showPaymentModal}
         transparent

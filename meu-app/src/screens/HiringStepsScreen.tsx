@@ -7,8 +7,11 @@ import {
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
+import api from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 interface HiringStepsScreenProps {
   route?: any;
@@ -17,25 +20,28 @@ interface HiringStepsScreenProps {
 type StepType = 'proposal' | 'negotiation' | 'contract' | 'payment' | 'completed';
 
 interface ContractData {
-  jobId: string;
+  jobId: number;
   proposedBudget: string;
   timeline: string;
   description: string;
   acceptedByClient: boolean;
+  freelancerId?: number;
 }
 
 export const HiringStepsScreen: React.FC<HiringStepsScreenProps> = ({ route }) => {
   const navigation = useNavigation<any>();
-  const jobId = route?.params?.jobId || 'unknown';
+  const { usuario } = useAuth();
+  const jobId = route?.params?.jobId || 1;
 
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [loading, setLoading] = useState(false);
   const [contractData, setContractData] = useState<ContractData>({
-    jobId,
+    jobId: typeof jobId === 'number' ? jobId : parseInt(jobId),
     proposedBudget: '',
     timeline: '',
     description: '',
     acceptedByClient: false,
+    freelancerId: usuario?.id || 1,
   });
 
   const steps: Array<{
@@ -79,9 +85,28 @@ export const HiringStepsScreen: React.FC<HiringStepsScreenProps> = ({ route }) =
   const handleNextStep = async () => {
     if (currentStep === 0) {
       // Validacao proposta step
-      if (!contractData.proposedBudget || !contractData.timeline) {
-        alert('Por favor, preencha todos os campos da proposta');
+      if (!contractData.proposedBudget || !contractData.timeline || !contractData.description) {
+        Alert.alert('Erro', 'Por favor, preencha todos os campos da proposta');
         return;
+      }
+
+      // Enviar proposta para API
+      try {
+        setLoading(true);
+        await api.enviarProposta(
+          contractData.jobId,
+          contractData.freelancerId || 1,
+          parseFloat(contractData.proposedBudget),
+          contractData.description
+        );
+        Alert.alert('Sucesso', 'Proposta enviada com sucesso!');
+      } catch (error: any) {
+        const mensagem = error.response?.data?.error || 'Erro ao enviar proposta';
+        Alert.alert('Erro', mensagem);
+        setLoading(false);
+        return;
+      } finally {
+        setLoading(false);
       }
     }
 
@@ -102,16 +127,17 @@ export const HiringStepsScreen: React.FC<HiringStepsScreenProps> = ({ route }) =
   const completeHiringProcess = async () => {
     try {
       setLoading(true);
-      console.log('Completing hiring process with data:', contractData);
+      
+      // Atualizar vaga para em_progresso
+      await api.atualizarVaga(contractData.jobId, {
+        status: 'em_progresso',
+      });
 
-      // Simular API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      alert('Contratação concluída com sucesso!');
+      Alert.alert('Sucesso', 'Contratação concluída com sucesso!');
       navigation.replace('Home');
     } catch (error) {
       console.error('Error completing hiring process:', error);
-      alert('Erro ao concluir a contratação. Tente novamente.');
+      Alert.alert('Erro', 'Erro ao concluir a contratação. Tente novamente.');
     } finally {
       setLoading(false);
     }

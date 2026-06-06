@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Text } from 'react-native';
 
+import Login from './src/screens/Login';
 import { HomeScreen } from './src/screens/homeScreen';
 import { JobListingsScreen } from './src/screens/JobListingsScreen';
 import { HiringStepsScreen } from './src/screens/HiringStepsScreen';
@@ -20,6 +21,7 @@ const HomeStack = () => {
         contentStyle: { backgroundColor: '#F8F9FA' },
       }}
     >
+      <Stack.Screen name="Login" component={Login} />
       <Stack.Screen name="HomeMain" component={HomeScreen} />
       <Stack.Screen name="JobListings" component={JobListingsScreen} />
       <Stack.Screen name="HiringSteps" component={HiringStepsScreen} />

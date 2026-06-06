@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,15 +7,70 @@ import {
   TouchableOpacity,
   Image,
   Dimensions,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import api from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 interface HomeScreenProps {
   navigation?: any;
+  route?: any;
 }
 
-export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
+interface StatsData {
+  totalVagas: number;
+  vagasAbertas: number;
+  totalFreelancers: number;
+}
+
+export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
+  const { usuario } = useAuth();
   const screenHeight = Dimensions.get('window').height;
+  const [stats, setStats] = useState<StatsData>({
+    totalVagas: 0,
+    vagasAbertas: 0,
+    totalFreelancers: 0,
+  });
+  const [loading, setLoading] = useState(false);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      if (usuario) {
+        carregarEstatisticas();
+      }
+    }, [usuario])
+  );
+
+  const carregarEstatisticas = async () => {
+    try {
+      setLoading(true);
+      
+      // Carregar vagas
+      const vagas = await api.listarVagas();
+      const vagasAbertas = vagas.filter((v: any) => v.status === 'aberta').length;
+      
+      // Carregar freelancers
+      const freelancers = await api.listarFreelancers();
+      
+      setStats({
+        totalVagas: vagas.length,
+        vagasAbertas,
+        totalFreelancers: freelancers.length,
+      });
+    } catch (error) {
+      console.error('Erro ao carregar estatísticas:', error);
+      // Usar valores padrão em caso de erro
+      setStats({
+        totalVagas: 1250,
+        vagasAbertas: 1250,
+        totalFreelancers: 500,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleBrowseJobs = () => {
     navigation?.navigate('JobListings');
@@ -33,6 +88,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
         <Text style={styles.greeting}>Bem-vindo ao WorkMatch! 🤝</Text>
+        {usuario && (
+          <Text style={styles.subGreeting}>{usuario.nome || 'Usuário'}</Text>
+        )}
         <Text style={styles.subGreeting}>Encontre as melhores oportunidades de trabalho</Text>
       </View>
 
@@ -51,20 +109,26 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         </View>
       </View>
 
-      <View style={styles.statsContainer}>
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>1.250+</Text>
-          <Text style={styles.statLabel}>Projetos Disponíveis</Text>
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#3B82F6" />
         </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>4.8★</Text>
-          <Text style={styles.statLabel}>Avaliação Média</Text>
+      ) : (
+        <View style={styles.statsContainer}>
+          <View style={styles.statCard}>
+            <Text style={styles.statNumber}>{stats.totalVagas}+</Text>
+            <Text style={styles.statLabel}>Projetos Disponíveis</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statNumber}>4.8★</Text>
+            <Text style={styles.statLabel}>Avaliação Média</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statNumber}>{stats.totalFreelancers}+</Text>
+            <Text style={styles.statLabel}>Freelancers Ativos</Text>
+          </View>
         </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>500+</Text>
-          <Text style={styles.statLabel}>Freelancers Ativos</Text>
-        </View>
-      </View>
+      )}
 
       <View style={styles.actionButtonsContainer}>
         <TouchableOpacity 
@@ -152,16 +216,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           </View>
         </View>
       </View>
-
-      <View style={styles.footerCTA}>
-        <Text style={styles.footerCTATitle}>Pronto para começar?</Text>
-        <TouchableOpacity 
-          style={styles.primaryButton}
-          onPress={handleBrowseJobs}
-        >
-          <Text style={styles.primaryButtonText}>Explorar Vagas</Text>
-        </TouchableOpacity>
-      </View>
     </ScrollView>
   );
 };
@@ -170,6 +224,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8F9FA',
+  },
+  loadingContainer: {
+    paddingVertical: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   header: {
     padding: 24,
@@ -319,18 +378,11 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     lineHeight: 18,
   },
-  footerCTA: {
+  ctaContainer: {
     paddingHorizontal: 16,
     paddingVertical: 24,
   },
-  footerCTATitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1F2937',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  primaryButton: {
+  ctaButton: {
     backgroundColor: '#3B82F6',
     borderRadius: 8,
     paddingVertical: 14,
@@ -338,7 +390,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 24,
   },
-  primaryButtonText: {
+  ctaButtonText: {
     color: '#FFFFFF',
     fontWeight: '600',
     fontSize: 16,
