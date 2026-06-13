@@ -2,116 +2,126 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text } from 'react-native';
+import { Text, View } from 'react-native';
 
+import { AuthProvider, useAuth } from './src/contexts/Authcontext';
 import Login from './src/screens/Login';
 import { HomeScreen } from './src/screens/homeScreen';
 import { JobListingsScreen } from './src/screens/JobListingsScreen';
 import { HiringStepsScreen } from './src/screens/HiringStepsScreen';
 import { PaymentScreen } from './src/screens/PaymentScreen';
+import { FreelancerDashboard } from './src/screens/Freelancerdashboard';
+import { ProfileScreen } from './src/screens/Profilescreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-const HomeStack = () => {
+// Stack para contratação (cliente)
+const JobsStack = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#F8F9FA' } }}>
+    <Stack.Screen name="JobsMain" component={JobListingsScreen} />
+    <Stack.Screen name="HiringSteps" component={HiringStepsScreen} />
+    <Stack.Screen name="Payment" component={PaymentScreen} />
+  </Stack.Navigator>
+);
+
+// Stack para home com navegação
+const HomeStack = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#F8F9FA' } }}>
+    <Stack.Screen name="HomeMain" component={HomeScreen} />
+    <Stack.Screen name="JobListings" component={JobListingsScreen} />
+    <Stack.Screen name="HiringSteps" component={HiringStepsScreen} />
+    <Stack.Screen name="Payment" component={PaymentScreen} />
+  </Stack.Navigator>
+);
+
+// Tabs do Freelancer
+const FreelancerTabs = () => (
+  <Tab.Navigator
+    screenOptions={({ route }) => ({
+      headerShown: false,
+      tabBarActiveTintColor: '#3B82F6',
+      tabBarInactiveTintColor: '#9CA3AF',
+      tabBarStyle: {
+        backgroundColor: '#FFFFFF',
+        borderTopWidth: 1,
+        borderTopColor: '#E5E7EB',
+        paddingBottom: 8,
+        paddingTop: 8,
+        height: 64,
+      },
+      tabBarLabelStyle: { fontSize: 12, fontWeight: '600', marginTop: 2 },
+      tabBarIcon: ({ color, size }) => {
+        const icons: Record<string, string> = {
+          Início: '🏠', Meus_Serviços: '💼', Perfil: '👤',
+        };
+        return <Text style={{ fontSize: size - 2, color }}>{icons[route.name] || '●'}</Text>;
+      },
+    })}
+  >
+    <Tab.Screen name="Início" component={HomeStack} options={{ title: 'Início' }} />
+    <Tab.Screen name="Meus_Serviços" component={FreelancerDashboard} options={{ title: 'Meus Serviços' }} />
+    <Tab.Screen name="Perfil" component={ProfileScreen} options={{ title: 'Perfil' }} />
+  </Tab.Navigator>
+);
+
+// Tabs do Cliente
+const ClienteTabs = () => (
+  <Tab.Navigator
+    screenOptions={({ route }) => ({
+      headerShown: false,
+      tabBarActiveTintColor: '#059669',
+      tabBarInactiveTintColor: '#9CA3AF',
+      tabBarStyle: {
+        backgroundColor: '#FFFFFF',
+        borderTopWidth: 1,
+        borderTopColor: '#E5E7EB',
+        paddingBottom: 8,
+        paddingTop: 8,
+        height: 64,
+      },
+      tabBarLabelStyle: { fontSize: 12, fontWeight: '600', marginTop: 2 },
+      tabBarIcon: ({ color, size }) => {
+        const icons: Record<string, string> = {
+          Início: '🏠', Vagas: '🔍', Perfil: '👤',
+        };
+        return <Text style={{ fontSize: size - 2, color }}>{icons[route.name] || '●'}</Text>;
+      },
+    })}
+  >
+    <Tab.Screen name="Início" component={HomeStack} options={{ title: 'Início' }} />
+    <Tab.Screen name="Vagas" component={JobsStack} options={{ title: 'Contratar' }} />
+    <Tab.Screen name="Perfil" component={ProfileScreen} options={{ title: 'Perfil' }} />
+  </Tab.Navigator>
+);
+
+// Navigator raiz com lógica de auth
+const RootNavigator = () => {
+  const { usuario, logout } = useAuth();
+
   return (
-    <Stack.Navigator
-      screenOptions={{
-        headerShown: false,
-        contentStyle: { backgroundColor: '#F8F9FA' },
-      }}
-    >
-      <Stack.Screen name="Login" component={Login} />
-      <Stack.Screen name="HomeMain" component={HomeScreen} />
-      <Stack.Screen name="JobListings" component={JobListingsScreen} />
-      <Stack.Screen name="HiringSteps" component={HiringStepsScreen} />
-      <Stack.Screen name="Payment" component={PaymentScreen} />
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      {!usuario ? (
+        <Stack.Screen name="Login" component={Login} />
+      ) : (
+        <Stack.Screen
+          name="Main"
+          component={usuario.tipo === 'freelancer' ? FreelancerTabs : ClienteTabs}
+          listeners={{
+            // limpa pilha ao navegar para Main
+          }}
+        />
+      )}
     </Stack.Navigator>
   );
 };
 
-const JobsStack = () => {
+export default function App() {
   return (
-    <Stack.Navigator
-      screenOptions={{
-        headerShown: false,
-          contentStyle: { backgroundColor: '#F8F9FA' },
-      }}
-    >
-      <Stack.Screen name="JobsMain" component={JobListingsScreen} />
-      <Stack.Screen name="HiringSteps" component={HiringStepsScreen} />
-      <Stack.Screen name="Payment" component={PaymentScreen} />
-    </Stack.Navigator>
+    <AuthProvider>
+      <NavigationContainer>
+        <RootNavigator />
+      </NavigationContainer>
+    </AuthProvider>
   );
-};
-
-const AppNavigator = () => {
-  return (
-    <NavigationContainer>
-      <Tab.Navigator
-        screenOptions={({ route }: { route: { name: string } }) => ({
-          headerShown: false,
-          tabBarActiveTintColor: '#3B82F6',
-          tabBarInactiveTintColor: '#9CA3AF',
-          tabBarStyle: {
-            backgroundColor: '#FFFFFF',
-            borderTopWidth: 1,
-            borderTopColor: '#E5E7EB',
-            paddingBottom: 8,
-            paddingTop: 8,
-            height: 64,
-          },
-          tabBarLabelStyle: {
-            fontSize: 12,
-            fontWeight: '500',
-            marginTop: 4,
-          },
-          tabBarIcon: ({ color, size }: { color: string; size: number }) => {
-            let icon = '';
-            if (route.name === 'Home') {
-              icon = '🏠';
-            } else if (route.name === 'Jobs') {
-              icon = '💼';
-            } else if (route.name === 'Messages') {
-              icon = '💬';
-            } else if (route.name === 'Profile') {
-              icon = '👤';
-            }
-            return <Text style={{ fontSize: size, color }}>{icon}</Text>;
-          },
-        })}
-      >
-        <Tab.Screen
-          name="Home"
-          component={HomeStack}
-          options={{
-            title: 'Home',
-          }}
-        />
-        <Tab.Screen
-          name="Jobs"
-          component={JobsStack}
-          options={{
-            title: 'Vagas',
-          }}
-        />
-        <Tab.Screen
-          name="Messages"
-          component={HomeScreen}
-          options={{
-            title: 'Mensagens',
-          }}
-        />
-        <Tab.Screen
-          name="Profile"
-          component={HomeScreen}
-          options={{
-            title: 'Perfil',
-          }}
-        />
-      </Tab.Navigator>
-    </NavigationContainer>
-  );
-};
-
-export default AppNavigator;
+}

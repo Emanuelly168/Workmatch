@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
 
-const API_URL = 'http://localhost:3000';
+const API_URL = 'http://192.168.15.128:3000';
 
 class WorkmatchAPI {
   private client: AxiosInstance;
@@ -10,7 +10,7 @@ class WorkmatchAPI {
   constructor() {
     this.client = axios.create({
       baseURL: API_URL,
-      timeout: 10000,
+      timeout: 30000,
       headers: {
         'Content-Type': 'application/json',
       },

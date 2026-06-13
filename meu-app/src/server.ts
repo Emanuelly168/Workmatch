@@ -467,7 +467,7 @@ app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'API do WorkMatch rodando ✓', timestamp: new Date() });
 });
 
-app.listen(3000, () => {
+app.listen(3000,'0.0.0.0', () => {
   console.log('🚀 API do WorkMatch rodando na porta 3000');
   console.log('📍 http://localhost:3000');
 });
