@@ -117,11 +117,12 @@ app.post('/auth/login', async (req: Request, res: Response) => {
     }
 
     return res.json({
-      id: user.id,
-      email: user.email,
-      nome: user.nome,
-      tipo: user.tipo,
-    });
+    id: user.id,
+    email: user.email,
+    nome: user.nome,
+    tipo: user.tipo,
+    telefone: user.telefone,
+});
   } catch (error: any) {
     return res.status(500).json({ error: error.message });
   }

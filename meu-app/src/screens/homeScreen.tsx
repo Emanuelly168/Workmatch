@@ -1,398 +1,139 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Image,
-  Dimensions,
-  ActivityIndicator,
-  Alert,
-} from 'react-native';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import api from '../services/api';
+import React, { useRef, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Animated } from 'react-native';
 import { useAuth } from '../contexts/Authcontext';
 
-interface HomeScreenProps {
-  navigation?: any;
-  route?: any;
-}
-
-interface StatsData {
-  totalVagas: number;
-  vagasAbertas: number;
-  totalFreelancers: number;
-}
-
-export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation, route }) => {
+export const HomeScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
   const { usuario } = useAuth();
-  const screenHeight = Dimensions.get('window').height;
-  const [stats, setStats] = useState<StatsData>({
-    totalVagas: 0,
-    vagasAbertas: 0,
-    totalFreelancers: 0,
+  const isFreelancer = usuario?.tipo === 'freelancer';
+
+  const headerAnim = useRef(new Animated.Value(0)).current;
+  const bannerAnim = useRef(new Animated.Value(0)).current;
+  const cardsAnim = useRef(new Animated.Value(0)).current;
+  const stepsAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.stagger(120, [
+      Animated.timing(headerAnim, { toValue: 1, duration: 500, useNativeDriver: true }),
+      Animated.timing(bannerAnim, { toValue: 1, duration: 500, useNativeDriver: true }),
+      Animated.timing(cardsAnim, { toValue: 1, duration: 500, useNativeDriver: true }),
+      Animated.timing(stepsAnim, { toValue: 1, duration: 500, useNativeDriver: true }),
+    ]).start();
+  }, []);
+
+  const fadeSlide = (anim: Animated.Value, dy = 24) => ({
+    opacity: anim,
+    transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [dy, 0] }) }],
   });
-  const [loading, setLoading] = useState(false);
 
-  useFocusEffect(
-    React.useCallback(() => {
-      if (usuario) {
-        carregarEstatisticas();
-      }
-    }, [usuario])
-  );
-
-  const carregarEstatisticas = async () => {
-    try {
-      setLoading(true);
-      
-      // Carregar vagas
-      const vagas = await api.listarVagas();
-      const vagasAbertas = vagas.filter((v: any) => v.status === 'aberta').length;
-      
-      // Carregar freelancers
-      const freelancers = await api.listarFreelancers();
-      
-      setStats({
-        totalVagas: vagas.length,
-        vagasAbertas,
-        totalFreelancers: freelancers.length,
-      });
-    } catch (error) {
-      console.error('Erro ao carregar estatísticas:', error);
-      // Usar valores padrão em caso de erro
-      setStats({
-        totalVagas: 1250,
-        vagasAbertas: 1250,
-        totalFreelancers: 500,
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleBrowseJobs = () => {
-    navigation?.navigate('JobListings');
-  };
-
-  const handleMyProfile = () => {
-    navigation?.navigate('Profile');
-  };
-
-  const handleMyEarnings = () => {
-    navigation?.navigate('Earnings');
-  };
+  const handlePrincipal = () => navigation?.navigate(isFreelancer ? 'Meus_Serviços' : 'Vagas');
+  const handlePerfil = () => navigation?.navigate('Perfil');
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <View style={styles.header}>
+      <Animated.View style={[styles.header, fadeSlide(headerAnim)]}>
         <Text style={styles.greeting}>Bem-vindo ao WorkMatch! 🤝</Text>
-        {usuario && (
-          <Text style={styles.subGreeting}>{usuario.nome || 'Usuário'}</Text>
-        )}
-        <Text style={styles.subGreeting}>Encontre as melhores oportunidades de trabalho</Text>
-      </View>
+        {usuario && <Text style={styles.nome}>{usuario.nome}</Text>}
+        <Text style={styles.sub}>
+          {isFreelancer
+            ? 'Publique seus serviços e conquiste clientes'
+            : 'Encontre o profissional perfeito para seu projeto'}
+        </Text>
+      </Animated.View>
 
-      <View style={styles.bannerContainer}>
-        <View style={styles.banner}>
-          <Text style={styles.bannerTitle}>Oportunidades em Destaque</Text>
-          <Text style={styles.bannerSubtitle}>
-            Descubra projetos com alta demanda e boas remunerações
+      <Animated.View style={[styles.bannerWrap, fadeSlide(bannerAnim)]}>
+        <View style={[styles.banner, isFreelancer ? styles.bannerFreelancer : styles.bannerCliente]}>
+          <Text style={styles.bannerTitle}>{isFreelancer ? '💼 Área do Freelancer' : '🏢 Área do Cliente'}</Text>
+          <Text style={styles.bannerSub}>
+            {isFreelancer
+              ? 'Publique seus serviços e receba propostas de clientes'
+              : 'Explore serviços de freelancers qualificados'}
           </Text>
-          <TouchableOpacity 
-            style={styles.bannerButton}
-            onPress={handleBrowseJobs}
-          >
-            <Text style={styles.bannerButtonText}>Explorar Agora</Text>
+          <TouchableOpacity style={styles.bannerBtn} onPress={handlePrincipal}>
+            <Text style={[styles.bannerBtnText, { color: isFreelancer ? '#0A2E73' : '#065F46' }]}>
+              {isFreelancer ? 'Gerenciar Serviços' : 'Explorar Serviços'}
+            </Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </Animated.View>
 
-      {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#3B82F6" />
-        </View>
-      ) : (
-        <View style={styles.statsContainer}>
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>{stats.totalVagas}+</Text>
-            <Text style={styles.statLabel}>Projetos Disponíveis</Text>
+      {/* Apenas 1 ação rápida: Meu Perfil */}
+      <Animated.View style={[styles.acoesWrap, fadeSlide(cardsAnim)]}>
+        <TouchableOpacity style={styles.acaoBtn} onPress={handlePrincipal}>
+          <Text style={styles.acaoIcon}>{isFreelancer ? '📋' : '🔍'}</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.acaoTitle}>{isFreelancer ? 'Meus Serviços' : 'Buscar Serviços'}</Text>
+            <Text style={styles.acaoDesc}>{isFreelancer ? 'Gerencie o que você oferece' : 'Encontre profissionais'}</Text>
           </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>4.8★</Text>
-            <Text style={styles.statLabel}>Avaliação Média</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>{stats.totalFreelancers}+</Text>
-            <Text style={styles.statLabel}>Freelancers Ativos</Text>
-          </View>
-        </View>
-      )}
-
-      <View style={styles.actionButtonsContainer}>
-        <TouchableOpacity 
-          style={styles.actionButton}
-          onPress={handleBrowseJobs}
-        >
-          <Text style={styles.actionButtonIcon}>💼</Text>
-          <Text style={styles.actionButtonTitle}>Buscar Vagas</Text>
-          <Text style={styles.actionButtonDescription}>
-            Encontre projetos que combinam com você
-          </Text>
+          <Text style={styles.acaoArrow}>›</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={styles.actionButton}
-          onPress={handleMyProfile}
-        >
-          <Text style={styles.actionButtonIcon}>👤</Text>
-          <Text style={styles.actionButtonTitle}>Meu Perfil</Text>
-          <Text style={styles.actionButtonDescription}>
-            Gerencie seus dados e portfólio
-          </Text>
+        <TouchableOpacity style={styles.acaoBtn} onPress={handlePerfil}>
+          <Text style={styles.acaoIcon}>👤</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.acaoTitle}>Meu Perfil</Text>
+            <Text style={styles.acaoDesc}>Gerencie seus dados pessoais</Text>
+          </View>
+          <Text style={styles.acaoArrow}>›</Text>
         </TouchableOpacity>
+      </Animated.View>
 
-        <TouchableOpacity 
-          style={styles.actionButton}
-          onPress={handleMyEarnings}
-        >
-          <Text style={styles.actionButtonIcon}>💰</Text>
-          <Text style={styles.actionButtonTitle}>Meus Ganhos</Text>
-          <Text style={styles.actionButtonDescription}>
-            Acompanhe seus rendimentos
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.howItWorksContainer}>
+      <Animated.View style={[styles.howWrap, fadeSlide(stepsAnim)]}>
         <Text style={styles.sectionTitle}>Como Funciona?</Text>
-        
-        <View style={styles.stepContainer}>
-          <View style={styles.stepNumber}>
-            <Text style={styles.stepNumberText}>1</Text>
+        {(isFreelancer ? [
+          { n: '1', title: 'Crie seu perfil', desc: 'Adicione suas habilidades' },
+          { n: '2', title: 'Publique serviços', desc: 'Mostre o que você sabe fazer' },
+          { n: '3', title: 'Receba propostas', desc: 'Clientes entram em contato' },
+          { n: '4', title: 'Ganhe dinheiro', desc: 'Conclua e receba com segurança' },
+        ] : [
+          { n: '1', title: 'Explore serviços', desc: 'Veja freelancers disponíveis' },
+          { n: '2', title: 'Faça uma proposta', desc: 'Negocie o valor e prazo' },
+          { n: '3', title: 'Contrate', desc: 'Feche o contrato com segurança' },
+          { n: '4', title: 'Pague com segurança', desc: 'Pagamento protegido pela plataforma' },
+        ]).map((step, i) => (
+          <View key={i} style={styles.step}>
+            <View style={[styles.stepNum, isFreelancer ? styles.stepNumBlue : styles.stepNumGreen]}>
+              <Text style={styles.stepNumText}>{step.n}</Text>
+            </View>
+            <View style={styles.stepContent}>
+              <Text style={styles.stepTitle}>{step.title}</Text>
+              <Text style={styles.stepDesc}>{step.desc}</Text>
+            </View>
           </View>
-          <View style={styles.stepContent}>
-            <Text style={styles.stepTitle}>Complete seu Perfil</Text>
-            <Text style={styles.stepDescription}>
-              Adicione suas habilidades e experiências
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.stepContainer}>
-          <View style={styles.stepNumber}>
-            <Text style={styles.stepNumberText}>2</Text>
-          </View>
-          <View style={styles.stepContent}>
-            <Text style={styles.stepTitle}>Busque Oportunidades</Text>
-            <Text style={styles.stepDescription}>
-              Encontre projetos que combinam com você
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.stepContainer}>
-          <View style={styles.stepNumber}>
-            <Text style={styles.stepNumberText}>3</Text>
-          </View>
-          <View style={styles.stepContent}>
-            <Text style={styles.stepTitle}>Candidate-se</Text>
-            <Text style={styles.stepDescription}>
-              Envie uma proposta para o cliente
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.stepContainer}>
-          <View style={styles.stepNumber}>
-            <Text style={styles.stepNumberText}>4</Text>
-          </View>
-          <View style={styles.stepContent}>
-            <Text style={styles.stepTitle}>Receba Pagamento</Text>
-            <Text style={styles.stepDescription}>
-              Conclua o projeto e receba com segurança
-            </Text>
-          </View>
-        </View>
-      </View>
+        ))}
+      </Animated.View>
+      <View style={{ height: 24 }} />
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F8F9FA',
-  },
-  loadingContainer: {
-    paddingVertical: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  header: {
-    padding: 24,
-    paddingTop: 32,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-  },
-  greeting: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#1F2937',
-    marginBottom: 8,
-  },
-  subGreeting: {
-    fontSize: 16,
-    color: '#6B7280',
-    lineHeight: 24,
-  },
-  bannerContainer: {
-    padding: 16,
-  },
-  banner: {
-    backgroundColor: '#3B82F6',
-    borderRadius: 12,
-    padding: 24,
-    overflow: 'hidden',
-  },
-  bannerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 8,
-  },
-  bannerSubtitle: {
-    fontSize: 14,
-    color: '#E0E7FF',
-    lineHeight: 20,
-    marginBottom: 16,
-  },
-  bannerButton: {
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    alignSelf: 'flex-start',
-  },
-  bannerButtonText: {
-    color: '#3B82F6',
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: 16,
-    marginVertical: 16,
-    gap: 12,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  statNumber: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#3B82F6',
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#6B7280',
-    textAlign: 'center',
-  },
-  actionButtonsContainer: {
-    paddingHorizontal: 16,
-    marginBottom: 24,
-    gap: 12,
-  },
-  actionButton: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  actionButtonIcon: {
-    fontSize: 32,
-    marginRight: 12,
-  },
-  actionButtonTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1F2937',
-    marginBottom: 4,
-  },
-  actionButtonDescription: {
-    fontSize: 13,
-    color: '#6B7280',
-  },
-  howItWorksContainer: {
-    paddingHorizontal: 16,
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1F2937',
-    marginBottom: 16,
-  },
-  stepContainer: {
-    flexDirection: 'row',
-    marginBottom: 16,
-    alignItems: 'flex-start',
-  },
-  stepNumber: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#3B82F6',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  stepNumberText: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  stepContent: {
-    flex: 1,
-  },
-  stepTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1F2937',
-    marginBottom: 4,
-  },
-  stepDescription: {
-    fontSize: 13,
-    color: '#6B7280',
-    lineHeight: 18,
-  },
-  ctaContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 24,
-  },
-  ctaButton: {
-    backgroundColor: '#3B82F6',
-    borderRadius: 8,
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  ctaButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-    fontSize: 16,
-  },
+  container: { flex: 1, backgroundColor: '#F0F4FF' },
+  header: { padding: 24, paddingTop: 32, backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
+  greeting: { fontSize: 22, fontWeight: '800', color: '#0A2E73', marginBottom: 2 },
+  nome: { fontSize: 15, fontWeight: '600', color: '#4F46E5', marginBottom: 4 },
+  sub: { fontSize: 13, color: '#6B7280', lineHeight: 20 },
+  bannerWrap: { padding: 16 },
+  banner: { borderRadius: 16, padding: 22 },
+  bannerFreelancer: { backgroundColor: '#0A2E73' },
+  bannerCliente: { backgroundColor: '#065F46' },
+  bannerTitle: { fontSize: 18, fontWeight: '800', color: '#FFFFFF', marginBottom: 8 },
+  bannerSub: { fontSize: 13, color: 'rgba(255,255,255,0.8)', lineHeight: 20, marginBottom: 16 },
+  bannerBtn: { backgroundColor: '#FFFFFF', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 10, alignSelf: 'flex-start' },
+  bannerBtnText: { fontWeight: '700', fontSize: 13 },
+  acoesWrap: { paddingHorizontal: 16, marginBottom: 8, gap: 10 },
+  acaoBtn: { backgroundColor: '#FFFFFF', borderRadius: 14, padding: 16, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#E5E7EB' },
+  acaoIcon: { fontSize: 28, marginRight: 14 },
+  acaoTitle: { fontSize: 15, fontWeight: '700', color: '#1F2937', marginBottom: 2 },
+  acaoDesc: { fontSize: 12, color: '#6B7280' },
+  acaoArrow: { fontSize: 22, color: '#9CA3AF', marginLeft: 8 },
+  howWrap: { paddingHorizontal: 16, marginBottom: 8 },
+  sectionTitle: { fontSize: 18, fontWeight: '800', color: '#0A2E73', marginBottom: 16 },
+  step: { flexDirection: 'row', marginBottom: 16, alignItems: 'flex-start' },
+  stepNum: { width: 38, height: 38, borderRadius: 19, justifyContent: 'center', alignItems: 'center', marginRight: 14 },
+  stepNumBlue: { backgroundColor: '#0A2E73' },
+  stepNumGreen: { backgroundColor: '#065F46' },
+  stepNumText: { color: '#FFFFFF', fontWeight: '800', fontSize: 15 },
+  stepContent: { flex: 1 },
+  stepTitle: { fontSize: 14, fontWeight: '700', color: '#1F2937', marginBottom: 2 },
+  stepDesc: { fontSize: 13, color: '#6B7280' },
 });
