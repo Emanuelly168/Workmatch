@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
 
-const API_URL = 'http://192.168.15.128:3000';
+const API_URL = 'https://workmatch-1ke2.onrender.com';
 
 class WorkmatchAPI {
   private client: AxiosInstance;
