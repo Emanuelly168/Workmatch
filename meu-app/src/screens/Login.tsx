@@ -8,24 +8,6 @@ import Svg, { Path, Circle } from 'react-native-svg';
 import api from '../services/api';
 import { useAuth } from '../contexts/Authcontext';
 
-// Logo SVG 
-const WorkMatchLogo = ({ size = 90 }: { size?: number }) => (
-  <Svg width={size} height={size * 1.1} viewBox="0 0 200 220">
-
-    <Path d="M100 8 C54 8 18 44 18 90 C18 142 100 212 100 212 C100 212 182 142 182 90 C182 44 146 8 100 8 Z" fill="#0A2E73" />
-
-    <Circle cx="100" cy="88" r="50" fill="none" stroke="#6B21FF" strokeWidth="3.5" strokeDasharray="9 5" />
-
-    <Circle cx="100" cy="88" r="40" fill="#071A4A" />
-
-    <Path d="M72 72 L128 72 L128 100 L72 100 Z" fill="#1D4ED8" rx="4" />
-
-    <Path d="M65 103 L135 103 L130 110 L70 110 Z" fill="#1D4ED8" />
-
-    <Path d="M75 74 L125 74 L125 98 L75 98 Z" fill="#93C5FD" />
-  </Svg>
-);
-
 export default function Login({ navigation }: any) {
   const { setUsuario } = useAuth();
   const [modo, setModo] = useState<'login' | 'cadastro'>('login');
@@ -46,29 +28,6 @@ export default function Login({ navigation }: any) {
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const fadeAnim = useRef(new Animated.Value(1)).current;
 
-  useEffect(() => {
-    
-    Animated.sequence([
-      Animated.parallel([
-        Animated.spring(logoY, { toValue: 0, tension: 55, friction: 9, useNativeDriver: true }),
-        Animated.timing(logoOpacity, { toValue: 1, duration: 600, useNativeDriver: true }),
-        Animated.spring(logoScale, { toValue: 1, tension: 55, friction: 9, useNativeDriver: true }),
-      ]),
-      Animated.parallel([
-        Animated.timing(formOpacity, { toValue: 1, duration: 450, useNativeDriver: true }),
-        Animated.timing(formY, { toValue: 0, duration: 450, useNativeDriver: true }),
-      ]),
-    ]).start();
-
-    // Pulso contínuo 
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.07, duration: 2000, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 1, duration: 2000, useNativeDriver: true }),
-      ])
-    ).start();
-  }, []);
-
   const trocarModo = (novoModo: 'login' | 'cadastro') => {
     Animated.timing(fadeAnim, { toValue: 0, duration: 150, useNativeDriver: true }).start(() => {
       setModo(novoModo); setErro('');
@@ -84,6 +43,7 @@ export default function Login({ navigation }: any) {
       setUsuario(usuario);
       navigation.replace('Main');
     } catch (e: any) {
+      setErro(e.response?.data?.error || e.message || 'Erro ao fazer login');
       setErro(e.response?.data?.error || e.message || 'Erro ao fazer login');
     } finally { setLoading(false); }
   };
