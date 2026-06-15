@@ -2,7 +2,7 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import Database from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
-import { usuarios, profissionais, vagas, propostas, pagamentos } from './db/schema';
+import { usuarios, profissionais, vagas, propostas, pagamentos } from './schema';
 import { eq, and } from 'drizzle-orm';
 
 const app = express();
@@ -117,11 +117,12 @@ app.post('/auth/login', async (req: Request, res: Response) => {
     }
 
     return res.json({
-      id: user.id,
-      email: user.email,
-      nome: user.nome,
-      tipo: user.tipo,
-    });
+    id: user.id,
+    email: user.email,
+    nome: user.nome,
+    tipo: user.tipo,
+    telefone: user.telefone,
+});
   } catch (error: any) {
     return res.status(500).json({ error: error.message });
   }
