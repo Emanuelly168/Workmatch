@@ -10,7 +10,7 @@ class WorkmatchAPI {
   constructor() {
     this.client = axios.create({
       baseURL: API_URL,
-      timeout: 100000,
+      timeout: 10000,
       headers: {
         'Content-Type': 'application/json',
       },

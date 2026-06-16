@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   TextInput, ActivityIndicator, Alert, Modal, Animated,
-  KeyboardAvoidingView, Platform,
+  KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard,
 } from 'react-native';
 import api from '../services/api';
 import { useAuth } from '../contexts/Authcontext';
@@ -331,35 +331,57 @@ export const FreelancerDashboard: React.FC = () => {
 
       {/* Modal publicar */}
       <Modal visible={modalVisible} transparent animationType="fade" onRequestClose={fecharModal}>
-        <View style={styles.overlay}>
-          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-            <Animated.View style={[styles.modal, { transform: [{ translateY: slideAnim }] }]}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Publicar Serviço</Text>
-                <TouchableOpacity onPress={fecharModal}><Text style={styles.closeBtn}>✕</Text></TouchableOpacity>
-              </View>
-              <ScrollView showsVerticalScrollIndicator={false}>
-                <Text style={styles.fieldLabel}>Título do serviço</Text>
-                <TextInput style={styles.fieldInput} placeholder="Ex: Desenvolvimento de app mobile" placeholderTextColor="#9CA3AF" value={titulo} onChangeText={setTitulo} />
-                <Text style={styles.fieldLabel}>Descrição</Text>
-                <TextInput style={[styles.fieldInput, styles.textarea]} placeholder="Descreva o que você oferece..." placeholderTextColor="#9CA3AF" value={descricao} onChangeText={setDescricao} multiline numberOfLines={4} textAlignVertical="top" />
-                <Text style={styles.fieldLabel}>Categoria</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
-                  {CATEGORIAS.map(c => (
-                    <TouchableOpacity key={c} style={[styles.catChip, categoria === c && styles.catChipActive]} onPress={() => setCategoria(c)}>
-                      <Text style={[styles.catChipText, categoria === c && styles.catChipTextActive]}>{c.charAt(0).toUpperCase() + c.slice(1)}</Text>
+        <KeyboardAvoidingView
+          style={styles.overlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          keyboardVerticalOffset={0}
+        >
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={{ flex: 1, justifyContent: 'flex-end' }}>
+              <TouchableWithoutFeedback>
+                <Animated.View style={[styles.modal, { transform: [{ translateY: slideAnim }] }]}>
+                  <View style={styles.modalHeader}>
+                    <Text style={styles.modalTitle}>Publicar Serviço</Text>
+                    <TouchableOpacity onPress={fecharModal}><Text style={styles.closeBtn}>✕</Text></TouchableOpacity>
+                  </View>
+                  <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+                    <Text style={styles.fieldLabel}>Título do serviço</Text>
+                    <TextInput style={styles.fieldInput} placeholder="Ex: Desenvolvimento de app mobile" placeholderTextColor="#9CA3AF" value={titulo} onChangeText={setTitulo} returnKeyType="done" />
+                    <Text style={styles.fieldLabel}>Descrição</Text>
+                    <TextInput style={[styles.fieldInput, styles.textarea]} placeholder="Descreva o que você oferece..." placeholderTextColor="#9CA3AF" value={descricao} onChangeText={setDescricao} multiline numberOfLines={4} textAlignVertical="top" returnKeyType="done" blurOnSubmit={true} />
+                    <Text style={styles.fieldLabel}>Categoria</Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
+                      {CATEGORIAS.map(c => (
+                        <TouchableOpacity key={c} style={[styles.catChip, categoria === c && styles.catChipActive]} onPress={() => setCategoria(c)}>
+                          <Text style={[styles.catChipText, categoria === c && styles.catChipTextActive]}>{c.charAt(0).toUpperCase() + c.slice(1)}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                    <Text style={styles.fieldLabel}>Valor (R$)</Text>
+                    <View style={styles.inputComBotao}>
+                      <TextInput
+                        style={[styles.fieldInput, { flex: 1 }]}
+                        placeholder="0,00"
+                        placeholderTextColor="#9CA3AF"
+                        value={orcamento}
+                        onChangeText={setOrcamento}
+                        keyboardType="numeric"
+                        returnKeyType="done"
+                        onSubmitEditing={Keyboard.dismiss}
+                      />
+                      <TouchableOpacity style={styles.btnConcluido} onPress={Keyboard.dismiss}>
+                        <Text style={styles.btnConcluidoText}>OK</Text>
+                      </TouchableOpacity>
+                    </View>
+                    <TouchableOpacity style={styles.publishBtn} onPress={publicarServico} disabled={salvando}>
+                      {salvando ? <ActivityIndicator color="#fff" /> : <Text style={styles.publishBtnText}>Publicar Serviço</Text>}
                     </TouchableOpacity>
-                  ))}
-                </ScrollView>
-                <Text style={styles.fieldLabel}>Valor (R$)</Text>
-                <TextInput style={styles.fieldInput} placeholder="0,00" placeholderTextColor="#9CA3AF" value={orcamento} onChangeText={setOrcamento} keyboardType="numeric" />
-                <TouchableOpacity style={styles.publishBtn} onPress={publicarServico} disabled={salvando}>
-                  {salvando ? <ActivityIndicator color="#fff" /> : <Text style={styles.publishBtnText}>Publicar Serviço</Text>}
-                </TouchableOpacity>
-              </ScrollView>
-            </Animated.View>
-          </KeyboardAvoidingView>
-        </View>
+                  </ScrollView>
+                </Animated.View>
+              </TouchableWithoutFeedback>
+            </View>
+          </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -433,6 +455,9 @@ const styles = StyleSheet.create({
   modalTitle: { fontSize: 18, fontWeight: '700', color: '#1F2937' },
   closeBtn: { fontSize: 18, color: '#9CA3AF', padding: 4 },
   fieldLabel: { fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 6, marginTop: 12 },
+  inputComBotao: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  btnConcluido: { backgroundColor: '#0A2E73', borderRadius: 10, paddingHorizontal: 16, paddingVertical: 12 },
+  btnConcluidoText: { color: '#FFFFFF', fontWeight: '700', fontSize: 13 },
   fieldInput: { backgroundColor: '#F9FAFB', borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, fontSize: 14, color: '#1F2937' },
   textarea: { minHeight: 90, textAlignVertical: 'top' },
   catChip: { marginRight: 8, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' },

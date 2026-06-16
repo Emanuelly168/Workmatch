@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   TextInput, ActivityIndicator, Alert, Modal, Animated,
+  KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard,
 } from 'react-native';
 import api from '../services/api';
 import { useAuth } from '../contexts/Authcontext';
@@ -351,27 +352,64 @@ export const ClienteDashboard: React.FC = () => {
 
       {/* Modal contra-proposta */}
       <Modal visible={modalProposta} transparent animationType="fade" onRequestClose={fecharModalProposta}>
-        <View style={styles.overlay}>
-          <Animated.View style={[styles.modal, { transform: [{ translateY: slideModal }] }]}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Enviar Proposta</Text>
-              <TouchableOpacity onPress={fecharModalProposta}><Text style={styles.closeBtn}>✕</Text></TouchableOpacity>
+        <KeyboardAvoidingView
+          style={styles.overlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          keyboardVerticalOffset={0}
+        >
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={{ flex: 1, justifyContent: 'flex-end' }}>
+              <TouchableWithoutFeedback>
+                <Animated.View style={[styles.modal, { transform: [{ translateY: slideModal }] }]}>
+                  <View style={styles.modalHeader}>
+                    <Text style={styles.modalTitle}>Enviar Proposta</Text>
+                    <TouchableOpacity onPress={fecharModalProposta}><Text style={styles.closeBtn}>✕</Text></TouchableOpacity>
+                  </View>
+                  <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+                    {servicoSelecionado && (
+                      <View style={styles.servicoInfo}>
+                        <Text style={styles.servicoInfoTitulo}>{servicoSelecionado.titulo}</Text>
+                        <Text style={styles.servicoInfoPreco}>Valor anunciado: R$ {servicoSelecionado.orcamento.toLocaleString('pt-BR')}</Text>
+                      </View>
+                    )}
+                    <Text style={styles.fieldLabel}>Seu valor proposto (R$)</Text>
+                    <View style={styles.inputComBotao}>
+                      <TextInput
+                        style={[styles.fieldInput, { flex: 1 }]}
+                        placeholder="Ex: 1500"
+                        placeholderTextColor="#9CA3AF"
+                        value={valorProposta}
+                        onChangeText={setValorProposta}
+                        keyboardType="numeric"
+                        returnKeyType="done"
+                        onSubmitEditing={Keyboard.dismiss}
+                      />
+                      <TouchableOpacity style={styles.btnConcluido} onPress={Keyboard.dismiss}>
+                        <Text style={styles.btnConcluidoText}>OK</Text>
+                      </TouchableOpacity>
+                    </View>
+                    <Text style={styles.fieldLabel}>Mensagem para o freelancer</Text>
+                    <TextInput
+                      style={[styles.fieldInput, styles.textarea]}
+                      placeholder="Explique sua proposta..."
+                      placeholderTextColor="#9CA3AF"
+                      value={descProposta}
+                      onChangeText={setDescProposta}
+                      multiline
+                      numberOfLines={3}
+                      textAlignVertical="top"
+                      returnKeyType="done"
+                      blurOnSubmit={true}
+                    />
+                    <TouchableOpacity style={styles.publishBtn} onPress={enviarContraproposta} disabled={enviandoProposta}>
+                      {enviandoProposta ? <ActivityIndicator color="#fff" /> : <Text style={styles.publishBtnText}>Enviar Proposta</Text>}
+                    </TouchableOpacity>
+                  </ScrollView>
+                </Animated.View>
+              </TouchableWithoutFeedback>
             </View>
-            {servicoSelecionado && (
-              <View style={styles.servicoInfo}>
-                <Text style={styles.servicoInfoTitulo}>{servicoSelecionado.titulo}</Text>
-                <Text style={styles.servicoInfoPreco}>Valor anunciado: R$ {servicoSelecionado.orcamento.toLocaleString('pt-BR')}</Text>
-              </View>
-            )}
-            <Text style={styles.fieldLabel}>Seu valor proposto (R$)</Text>
-            <TextInput style={styles.fieldInput} placeholder="Ex: 1500" placeholderTextColor="#9CA3AF" value={valorProposta} onChangeText={setValorProposta} keyboardType="numeric" />
-            <Text style={styles.fieldLabel}>Mensagem para o freelancer</Text>
-            <TextInput style={[styles.fieldInput, styles.textarea]} placeholder="Explique sua proposta..." placeholderTextColor="#9CA3AF" value={descProposta} onChangeText={setDescProposta} multiline numberOfLines={3} textAlignVertical="top" />
-            <TouchableOpacity style={styles.publishBtn} onPress={enviarContraproposta} disabled={enviandoProposta}>
-              {enviandoProposta ? <ActivityIndicator color="#fff" /> : <Text style={styles.publishBtnText}>Enviar Proposta</Text>}
-            </TouchableOpacity>
-          </Animated.View>
-        </View>
+          </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Modal pagamento */}
@@ -495,6 +533,9 @@ const styles = StyleSheet.create({
   servicoInfoPreco: { fontSize: 13, color: '#6B7280' },
   valorTotal: { fontSize: 22, fontWeight: '800', color: '#059669', marginTop: 4 },
   fieldLabel: { fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 6, marginTop: 12 },
+  inputComBotao: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  btnConcluido: { backgroundColor: '#0A2E73', borderRadius: 10, paddingHorizontal: 16, paddingVertical: 12 },
+  btnConcluidoText: { color: '#FFFFFF', fontWeight: '700', fontSize: 13 },
   fieldInput: { backgroundColor: '#F9FAFB', borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, fontSize: 14, color: '#1F2937' },
   textarea: { minHeight: 80, textAlignVertical: 'top' },
   metodosRow: { flexDirection: 'row', gap: 10, marginTop: 4 },
