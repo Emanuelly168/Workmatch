@@ -48,10 +48,10 @@ Antes de começar, certifique-se de ter instalado na sua máquina:
 
 ### 📦 Passo a Passo
 
-#### 1. Clonar o repositório
+**1. Clonar o repositório na branch da versão final (`main`)**
 
 ```bash
-git clone https://github.com/Emanuelly168/Workmatch.git
+git clone https://github.com/Emanuelly168/Workmatch.git ou git clone -b main https://github.com/Emanuelly168/Workmatch.git
 cd Workmatch
 ```
 
